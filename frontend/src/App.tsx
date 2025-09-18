@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Send, Mic, Square, Paperclip, PlayCircle, StopCircle,
-  Globe, Camera, ImageUp, Trash2
+  Globe, Camera, ImageUp, Trash2, Brain, Search, ChevronUp, ChevronDown
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -11,6 +11,8 @@ import { generateTextResponse } from "./services/aiService";
 import { analyzeImage } from "./services/imageAnalysisService";
 import { synthesizeSpeech } from "./services/textToSpeechService";
 import { transcribeAudio } from "./services/voiceTranscribeService";
+import { generatePerplexityResponse, generatePerplexitySearchResponse, convertToPerplexityMessages, type PerplexityResponse } from "./services/perplexityService";
+import { generateThinkingResponse, type ThinkingResponse } from "./services/thinkingService";
 
 // NOTE: Add this to your main CSS file (e.g., index.css) to style markdown
 /*
@@ -19,13 +21,20 @@ import { transcribeAudio } from "./services/voiceTranscribeService";
 }
 */
 
-// --- TYPE DEFINITIONS & CONSTANTS (Keep as is) ---
 export type Message = {
   id: number;
   role: "user" | "assistant";
   content: string;
   imageUrl?: string | null;
   suggestions?: string[];
+  searchResults?: Array<{
+    title: string;
+    url: string;
+    date?: string;
+    last_updated?: string;
+    snippet: string;
+  }>;
+  thinking?: string;
 };
 
 export type LanguageOption = {
@@ -171,6 +180,9 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const [useSearch, setUseSearch] = useState<boolean>(false); // Toggle search on/off
+  const [useThinking, setUseThinking] = useState<boolean>(false); // Toggle thinking on/off
+  const [showThinkingDrawer, setShowThinkingDrawer] = useState<boolean>(false); // Show/hide thinking drawer
 
   function getLanguageDetails(code: string) {
     return SUPPORTED_LANGUAGES.find(l => l.code === code) ?? SUPPORTED_LANGUAGES[0];
@@ -245,6 +257,27 @@ export default function ChatPage() {
             currentInput,
             { inlineData: { mimeType: userImage.match(/data:(.*);base64,/)![1], data: userImage.split(',')[1] } }
           )
+        : useThinking
+        ? await generateThinkingResponse(
+            `You are a helpful assistant specializing in agriculture. Provide accurate, practical information for farmers.\n\nUser question: ${currentInput}`,
+            {
+              model: 'qwen/qwen3-32b',
+              temperature: 0.6,
+            }
+          )
+        : useSearch
+        ? await generatePerplexitySearchResponse(
+            convertToPerplexityMessages([
+              { role: 'system', content: 'You are a helpful assistant specializing in agriculture. Provide accurate, practical information for farmers.' },
+              { role: 'user', content: currentInput }
+            ]),
+            {
+              model: 'sonar',
+              temperature: 0.2,
+              max_tokens: 2048,
+              stream: false,
+            }
+          )
         : await generateTextResponse(
             currentInput,
             history,
@@ -252,15 +285,38 @@ export default function ChatPage() {
           );
 
       let fullResponse = "";
-      for await (const chunk of stream) {
-        const chunkText = chunk.text();
-        fullResponse += chunkText;
-        setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: fullResponse } : m));
+      
+      if (useThinking && !userImage) {
+        // Handle Thinking response
+        const thinkingResponse = stream as ThinkingResponse;
+        fullResponse = thinkingResponse.answer;
+        setMessages(prev => prev.map(m => m.id === assistantMessageId ? { 
+          ...m, 
+          content: fullResponse,
+          thinking: thinkingResponse.thoughts
+        } : m));
+      } else if (useSearch && !userImage) {
+        // Handle Perplexity search response (non-streaming)
+        const responseData = stream as PerplexityResponse;
+        fullResponse = responseData.choices[0].message.content;
+        setMessages(prev => prev.map(m => m.id === assistantMessageId ? { 
+          ...m, 
+          content: fullResponse,
+          searchResults: responseData.search_results
+        } : m));
+      } else {
+        // Handle Google AI streaming response
+        const streamingResponse = stream as AsyncGenerator<any, any, any>;
+        for await (const chunk of streamingResponse) {
+          const chunkText = chunk.text();
+          fullResponse += chunkText;
+          setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: fullResponse } : m));
+        }
       }
 
-      // Extract suggestions
-      const suggestions = fullResponse.match(/>> .*/g)?.map(s => s.substring(3).trim()) || [];
-      const responseText = fullResponse.split('>>')[0].trim();
+      // Extract suggestions (only for Google AI responses)
+      const suggestions = !useSearch && !userImage ? fullResponse.match(/>> .*/g)?.map(s => s.substring(3).trim()) || [] : [];
+      const responseText = !useSearch && !userImage ? fullResponse.split('>>')[0].trim() : fullResponse;
       setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: responseText, suggestions } : m));
 
     } catch (err: any) {
@@ -430,6 +486,35 @@ export default function ChatPage() {
             <div className={`flex flex-col w-full ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`relative px-4 py-3 rounded-2xl ${message.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-sm'}`}>
                 {message.imageUrl && <img src={message.imageUrl} alt="User upload" className="mb-2 rounded-lg max-h-48" />}
+                
+                {/* Show thinking drawer above the answer for assistant messages */}
+                {message.role === 'assistant' && message.thinking && message.thinking.trim() && !isStreaming && (
+                  <div className="mb-3">
+                    <button
+                      onClick={() => setShowThinkingDrawer(!showThinkingDrawer)}
+                      className="flex items-center gap-2 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 text-indigo-700 text-sm font-medium transition-colors w-full justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-4 h-4" />
+                        Thinking Process
+                      </div>
+                      {showThinkingDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                    {showThinkingDrawer && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-2 p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-400 max-h-60 overflow-y-auto"
+                      >
+                        <div className="text-sm text-indigo-700 whitespace-pre-line">
+                          {message.thinking}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+                
                 {isStreaming && message.content === "" && message.role === 'assistant' ? <TypingIndicator /> : <MarkdownMessage content={message.content} />}
                 
                 {/* **IMPROVEMENT: SPEAK BUTTON PLACEMENT** */}
@@ -448,6 +533,24 @@ export default function ChatPage() {
                       <li key={i} className="text-sm text-green-700 flex items-start">
                         <span className="text-green-500 mr-2">•</span>
                         {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Display search results for Perplexity responses */}
+              {message.searchResults && message.searchResults.length > 0 && !isStreaming && (
+                <div className="mt-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400">
+                  <div className="text-sm font-medium text-purple-800 mb-2">📚 Search Results:</div>
+                  <ul className="space-y-2">
+                    {message.searchResults.map((result, i) => (
+                      <li key={i} className="text-sm">
+                        <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline font-medium">
+                          {result.title}
+                        </a>
+                        <p className="text-gray-600 mt-1">{result.snippet}</p>
+                        {result.date && <p className="text-xs text-gray-500 mt-1">Date: {result.date}</p>}
                       </li>
                     ))}
                   </ul>
@@ -538,6 +641,26 @@ export default function ChatPage() {
               )}
             </AnimatePresence>
           </div>
+          <Button
+            onClick={() => {
+              setUseSearch(!useSearch);
+              if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
+            }}
+            className={`p-3 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+            title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
+          >
+            <Search className="w-5 h-5" />
+          </Button>
+          <Button
+            onClick={() => {
+              setUseThinking(!useThinking);
+              if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
+            }}
+            className={`p-3 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+            title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
+          >
+            <Brain className="w-5 h-5" />
+          </Button>
           <input
             type="file"
             ref={fileInputRef}
