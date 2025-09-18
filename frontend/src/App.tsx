@@ -70,7 +70,7 @@ export const INITIAL_SUGGESTIONS: { [key: string]: string[] } = {
 // --- UI COMPONENTS (Keep as is) ---
 const Button = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
   ({ className = "", children, ...props }, ref) => (
-    <button ref={ref} className={`inline-flex items-center justify-center text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none rounded-xl active:scale-95 ${className}`} {...props}>
+    <button ref={ref} className={`inline-flex items-center justify-center text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none rounded-xl border-b-2 border-transparent hover:border-gray-300 active:scale-95 ${className}`} {...props}>
       {children}
     </button>
   )
@@ -255,7 +255,8 @@ export default function ChatPage() {
       const stream = userImage
         ? await analyzeImage(
             currentInput,
-            { inlineData: { mimeType: userImage.match(/data:(.*);base64,/)![1], data: userImage.split(',')[1] } }
+            { inlineData: { mimeType: userImage.match(/data:(.*);base64,/)![1], data: userImage.split(',')[1] } },
+            selectedLanguage
           )
         : useThinking
         ? await generateThinkingResponse(
@@ -609,58 +610,148 @@ export default function ChatPage() {
             </button>
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-col gap-2">
+          {/* Tools row - appears above input on mobile, inline on desktop */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <div className="relative">
+              <Button
+                onClick={() => setShowAttachmentMenu(prev => !prev)}
+                className="p-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+              >
+                <Paperclip size={18} />
+              </Button>
+              <AnimatePresence>
+                {showAttachmentMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                  >
+                    <button
+                      onClick={() => handleAttachmentClick('gallery')}
+                      className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                    >
+                      <ImageUp size={20} /> From Gallery
+                    </button>
+                    <button
+                      onClick={() => handleAttachmentClick('camera')}
+                      className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                    >
+                      <Camera size={20} /> Take Photo
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <Button
-              onClick={() => setShowAttachmentMenu(prev => !prev)}
-              className="p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+              onClick={() => {
+                setUseSearch(!useSearch);
+                if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
+              }}
+              className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+              title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
             >
-              <Paperclip size={20} />
+              <Search className="w-4 h-4" />
             </Button>
-            <AnimatePresence>
-              {showAttachmentMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
-                >
-                  <button
-                    onClick={() => handleAttachmentClick('gallery')}
-                    className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                  >
-                    <ImageUp size={20} /> From Gallery
-                  </button>
-                  <button
-                    onClick={() => handleAttachmentClick('camera')}
-                    className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                  >
-                    <Camera size={20} /> Take Photo
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Button
+              onClick={() => {
+                setUseThinking(!useThinking);
+                if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
+              }}
+              className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+              title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
+            >
+              <Brain className="w-4 h-4" />
+            </Button>
           </div>
-          <Button
-            onClick={() => {
-              setUseSearch(!useSearch);
-              if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
-            }}
-            className={`p-3 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-            title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
-          >
-            <Search className="w-5 h-5" />
-          </Button>
-          <Button
-            onClick={() => {
-              setUseThinking(!useThinking);
-              if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
-            }}
-            className={`p-3 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-            title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
-          >
-            <Brain className="w-5 h-5" />
-          </Button>
+
+          {/* Input row */}
+          <div className="flex items-center gap-2">
+            {/* Desktop tools - hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="relative">
+                <Button
+                  onClick={() => setShowAttachmentMenu(prev => !prev)}
+                  className="p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+                >
+                  <Paperclip size={20} />
+                </Button>
+                <AnimatePresence>
+                  {showAttachmentMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                    >
+                      <button
+                        onClick={() => handleAttachmentClick('gallery')}
+                        className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                      >
+                        <ImageUp size={20} /> From Gallery
+                      </button>
+                      <button
+                        onClick={() => handleAttachmentClick('camera')}
+                        className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                      >
+                        <Camera size={20} /> Take Photo
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <Button
+                onClick={() => {
+                  setUseSearch(!useSearch);
+                  if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
+                }}
+                className={`p-3 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
+              >
+                <Search className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={() => {
+                  setUseThinking(!useThinking);
+                  if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
+                }}
+                className={`p-3 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
+              >
+                <Brain className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={`Ask in ${getLanguageDetails(selectedLanguage).nativeName}...`}
+              disabled={isStreaming || isTranscribing}
+              rows={1}
+              className="w-full p-3 text-sm bg-gray-100 rounded-xl border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 resize-none min-h-[44px] max-h-32"
+            />
+            <Button
+              onClick={handleMicClick}
+              disabled={isStreaming}
+              className="p-2.5 sm:p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+            >
+              {isRecording ? <Square size={18} className="sm:w-5 text-red-500" /> : <Mic size={18} className="sm:w-5" />}
+            </Button>
+            <Button
+              onClick={() => handleSendMessage()}
+              disabled={isStreaming || (!input.trim() && !uploadedImage)}
+              className="p-2.5 sm:p-3 bg-green-600 text-white rounded-xl w-12 h-10 sm:w-14 sm:h-12 flex items-center justify-center"
+            >
+              {isStreaming ? <TypingIndicator /> : <Send size={18} className="sm:w-5" />}
+            </Button>
+          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -668,34 +759,6 @@ export default function ChatPage() {
             accept="image/*"
             className="hidden"
           />
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            placeholder={`Ask in ${getLanguageDetails(selectedLanguage).nativeName}...`}
-            disabled={isStreaming || isTranscribing}
-            rows={1}
-            className="w-full p-3 text-sm bg-gray-100 rounded-xl border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <Button
-            onClick={handleMicClick}
-            disabled={isStreaming}
-            className="p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
-          >
-            {isRecording ? <Square size={20} className="text-red-500" /> : <Mic size={20} />}
-          </Button>
-          <Button
-            onClick={() => handleSendMessage()}
-            disabled={isStreaming || (!input.trim() && !uploadedImage)}
-            className="p-3 bg-green-600 text-white rounded-xl w-14 h-12 flex items-center justify-center"
-          >
-            {isStreaming ? <TypingIndicator /> : <Send size={20} />}
-          </Button>
         </div>
       </footer>
     </div>
