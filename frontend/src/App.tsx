@@ -379,7 +379,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-28">
+      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-28 pb-24 md:pb-6">
         {messages.map((message) => (
           <motion.div
             key={message.id}
@@ -444,7 +444,7 @@ export default function ChatPage() {
       </main>
 
       {/* Footer remains the same */}
-      <footer className="flex-shrink-0 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200 z-10">
+      <footer className="fixed bottom-0 left-0 right-0 md:relative md:flex-shrink-0 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200 z-10">
         <AnimatePresence>
           {error && (
             <motion.div
