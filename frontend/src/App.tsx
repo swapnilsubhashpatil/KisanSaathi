@@ -326,10 +326,13 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-100 font-sans">
       {/* Header remains the same */}
-      <header className="relative flex justify-between items-center p-4 text-white bg-gradient-to-r from-green-600 to-green-800 shadow-md z-20">
+      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 text-white bg-gradient-to-r from-green-600 to-green-800 shadow-md z-20">
         <div className="flex items-center gap-3">
-          <Bot className="w-8 h-8" />
-          <h1 className="text-xl font-semibold">KisanSaathi</h1>
+          <img src="/KisanSaathi.png" alt="KisanSaathi" className="h-12 object-contain" />
+          <h1 className="text-2xl font-bold tracking-wide" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <span className="text-yellow-300">Kisan</span>
+            <span className="text-white">Saathi</span>
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -337,7 +340,7 @@ export default function ChatPage() {
               onClick={() => setShowLangDropdown(prev => !prev)}
               className="p-2 bg-white/20 hover:bg-white/30 text-white border-white/30"
             >
-              <Globe className="w-4 h-4 mr-2" />
+              <Globe className="w-5 h-5 mr-2" />
               {getLanguageDetails(selectedLanguage).nativeName}
             </Button>
             {showLangDropdown && (
@@ -376,7 +379,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-28">
         {messages.map((message) => (
           <motion.div
             key={message.id}
