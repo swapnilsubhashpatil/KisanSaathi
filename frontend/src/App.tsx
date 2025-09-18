@@ -113,6 +113,21 @@ const clearChatHistory = () => {
   }
 };
 
+// Function to clean markdown formatting for text-to-speech
+const cleanMarkdownForSpeech = (text: string): string => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold **text**
+    .replace(/\*(.*?)\*/g, '$1')     // Remove italic *text*
+    .replace(/```.*?```/gs, '')      // Remove code blocks
+    .replace(/`(.*?)`/g, '$1')       // Remove inline code
+    .replace(/#{1,6}\s*/g, '')       // Remove headers
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links, keep text
+    .replace(/^\s*[-*+]\s+/gm, '')   // Remove list markers
+    .replace(/^\s*\d+\.\s+/gm, '')   // Remove numbered list markers
+    .replace(/\n\s*\n/g, '\n')       // Clean up extra newlines
+    .trim();
+};
+
 // --- MAIN COMPONENT ---
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>(() => loadChatHistory());
@@ -245,8 +260,9 @@ export default function ChatPage() {
     setError(null);
 
     try {
-      // **IMPROVEMENT: Using the TTS service**
-      const audioElement = await synthesizeSpeech(message.content, selectedLanguage);
+      // **IMPROVEMENT: Using the TTS service with cleaned text**
+      const cleanedContent = cleanMarkdownForSpeech(message.content);
+      const audioElement = await synthesizeSpeech(cleanedContent, selectedLanguage);
       audioRef.current = audioElement;
       audioRef.current.play();
       audioRef.current.onended = () => setPlayingAudioId(null);
