@@ -115,7 +115,7 @@ const clearChatHistory = () => {
 
 // Function to clean markdown formatting for text-to-speech
 const cleanMarkdownForSpeech = (text: string): string => {
-  return text
+  let cleaned = text
     .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold **text**
     .replace(/\*(.*?)\*/g, '$1')     // Remove italic *text*
     .replace(/```.*?```/gs, '')      // Remove code blocks
@@ -126,6 +126,30 @@ const cleanMarkdownForSpeech = (text: string): string => {
     .replace(/^\s*\d+\.\s+/gm, '')   // Remove numbered list markers
     .replace(/\n\s*\n/g, '\n')       // Clean up extra newlines
     .trim();
+
+  // Check byte length and truncate if necessary (GCP TTS limit is 5000 bytes)
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(cleaned);
+
+  if (bytes.length > 5000) {
+    // Find a safe truncation point (roughly 80% of limit to account for multi-byte chars)
+    const maxChars = Math.floor(4000 / 4); // Conservative estimate for UTF-8
+    cleaned = cleaned.substring(0, maxChars);
+
+    // Try to end at a sentence or word boundary
+    const lastSentence = cleaned.lastIndexOf('.');
+    const lastWord = cleaned.lastIndexOf(' ');
+
+    if (lastSentence > cleaned.length * 0.7) {
+      cleaned = cleaned.substring(0, lastSentence + 1);
+    } else if (lastWord > cleaned.length * 0.7) {
+      cleaned = cleaned.substring(0, lastWord);
+    }
+
+    cleaned += '...';
+  }
+
+  return cleaned;
 };
 
 // --- MAIN COMPONENT ---
