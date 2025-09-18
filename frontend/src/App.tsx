@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Send, Bot, Mic, Square, Paperclip, PlayCircle, StopCircle,
+  X, Send, Mic, Square, Paperclip, PlayCircle, StopCircle,
   Globe, Camera, ImageUp, Trash2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -427,14 +427,6 @@ export default function ChatPage() {
             animate={{ opacity: 1, y: 0 }}
             className={`flex items-start gap-3 max-w-2xl ${message.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
           >
-            {message.role === 'assistant' && (
-              <Bot className="w-8 h-8 p-1.5 text-green-700 bg-white rounded-full shadow-md border flex-shrink-0 self-start mt-1" />
-            )}
-            {message.role === 'user' && (
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white font-medium flex-shrink-0 self-start mt-1">
-                You
-              </div>
-            )}
             <div className={`flex flex-col w-full ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`relative px-4 py-3 rounded-2xl ${message.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-sm'}`}>
                 {message.imageUrl && <img src={message.imageUrl} alt="User upload" className="mb-2 rounded-lg max-h-48" />}
