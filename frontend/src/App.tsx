@@ -11,7 +11,7 @@ import { generateTextResponse } from "./services/aiService";
 import { analyzeImage } from "./services/imageAnalysisService";
 import { synthesizeSpeech } from "./services/textToSpeechService";
 import { transcribeAudio } from "./services/voiceTranscribeService";
-import { generatePerplexityResponse, generatePerplexitySearchResponse, convertToPerplexityMessages, type PerplexityResponse } from "./services/perplexityService";
+import { generatePerplexitySearchResponse, convertToPerplexityMessages, type PerplexityResponse } from "./services/perplexityService";
 import { generateThinkingResponse, type ThinkingResponse } from "./services/thinkingService";
 
 // NOTE: Add this to your main CSS file (e.g., index.css) to style markdown
