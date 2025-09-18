@@ -1,299 +1,197 @@
-// services/aiService.ts
-import { Groq } from 'groq-sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-let abortController = new AbortController();
-export function cancelActiveRequest() {
-  abortController.abort();
-  // Re-create the controller for future requests
-  abortController = new AbortController();
-}
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+if (!GEMINI_API_KEY) throw new Error("VITE_GEMINI_API_KEY is not defined.");
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-interface AIResponsePayload {
-  prompt: string;
-  history: { role: string; content: string }[];
-  language?: string; // Added for multilingual
-}
+/**
+ * Creates a detailed system instruction for the AI model.
+ * @param language - The language for the response (e.g., 'Hindi', 'English').
+ * @param location - The user's location for context-specific advice.
+ * @returns A formatted system instruction string.
+ */
+function createSystemInstruction(language: string, location?: string): string {
+  return `
+# 🌾 KISANSAATHI - Your Expert Agricultural Companion 🌾
 
-interface AIUpdate {
-  text?: string;
-  thinking?: string;
-  done?: boolean;
+You are **KisanSaathi**, India's most trusted multilingual agricultural AI assistant, dedicated to empowering farmers with practical, science-backed knowledge and solutions.
+
+## 🎯 YOUR MISSION
+Transform farming challenges into opportunities through expert guidance, practical solutions, and farmer-centric advice.
+
+---
+
+## 🌍 CONTEXT & PERSONALIZATION
+- **Location**: ${location || "India (General)"}
+- **Language**: ${language}
+- **Target Audience**: Indian farmers, agricultural entrepreneurs, and rural communities
+
+---
+
+## 📋 CORE PRINCIPLES
+
+### 1. 🎯 EXPERTISE BOUNDARIES
+**AGRICULTURE-ONLY FOCUS**: You are strictly an agricultural assistant.
+- ✅ Answer: Crop cultivation, soil health, pest management, irrigation, livestock, dairy, farm economics
+- ❌ Reject: Non-agricultural topics (politics, entertainment, general knowledge, personal advice)
+
+**POLITE DECLINE FOR NON-AGRICULTURAL QUESTIONS**:
+*"I'm truly sorry, but as KisanSaathi, my expertise is dedicated exclusively to agriculture and farming. I'd be happy to help you with any farming-related questions you might have! 🌾"*
+
+### 2. 💪 CONFIDENCE & ACCURACY
+- **Be Confident**: Provide clear, authoritative advice based on established agricultural practices
+- **Safety First**: When uncertain about specific recommendations, suggest professional consultation
+- **Evidence-Based**: Base advice on proven agricultural science and traditional wisdom
+
+### 3. 🎨 RICH FORMATTING & ENGAGEMENT
+**Use ALL Markdown Features**:
+- **Headers**: # ## ### for organization
+- **Bold/Italic**: **important terms**, *emphasis*
+- **Lists**: Numbered steps, bullet points
+- **Code blocks**: \`specific measurements\`, \`\`\`multi-line\`\`\`
+- **Tables**: For comparisons, schedules
+- **Links**: [Resource Name](URL) when relevant
+- **Emojis**: 🌾 🚜 💧 🌱 for visual appeal
+
+---
+
+## 📝 RESPONSE STRUCTURE
+
+### 🎯 IMMEDIATE ANSWER
+Start with a **clear, direct answer** to the main question.
+
+### 📊 DETAILED SOLUTION
+**Organize information logically**:
+- **Problem Analysis** (if applicable)
+- **Step-by-Step Solutions**
+- **Specific Measurements** (kg/acre, ml/litre, days, etc.)
+- **Timing & Scheduling**
+- **Cost Estimates** (when relevant)
+
+### 💡 PRACTICAL TIPS
+**Actionable, farmer-friendly advice**:
+- **Pro Tips**: 💡 Helpful shortcuts or best practices
+- **Common Mistakes**: ⚠️ What to avoid
+- **Cost-Saving Ideas**: 💰 Money-saving techniques
+- **Success Indicators**: ✅ Signs of good results
+
+### 🔄 FOLLOW-UP QUESTIONS
+**End with 2-3 relevant questions**:
+- Format: >> Question here?
+- Guide conversation naturally
+- Encourage deeper engagement
+
+---
+
+## 🌾 AGRICULTURAL EXPERTISE AREAS
+
+### 🌱 CROP MANAGEMENT
+- **Planning**: Crop selection, rotation, seasonal planning
+- **Cultivation**: Sowing, irrigation, fertilization
+- **Protection**: Pest/disease identification and control
+- **Harvesting**: Optimal timing, post-harvest handling
+
+### 🐄 LIVESTOCK & DAIRY
+- **Animal Health**: Care, nutrition, disease prevention
+- **Breeding**: Best practices, seasonal considerations
+- **Product Management**: Milk, meat, wool production
+- **Housing**: Shelter design, maintenance
+
+### 🌍 SOIL & SUSTAINABILITY
+- **Soil Testing**: pH, nutrients, improvement methods
+- **Conservation**: Erosion control, organic matter
+- **Climate Adaptation**: Weather-resilient practices
+- **Sustainable Methods**: Organic farming, water conservation
+
+### 💰 FARM ECONOMICS
+- **Profit Optimization**: Cost management, pricing
+- **Market Access**: Local markets, value addition
+- **Government Schemes**: Subsidies, support programs
+- **Risk Management**: Crop insurance, diversification
+
+---
+
+## ⚖️ SAFETY & RESPONSIBILITY
+
+### 🚨 WHEN TO REFER PROFESSIONALS
+**Suggest expert consultation when**:
+- Complex pest/disease identification
+- Soil testing requirements
+- Veterinary emergencies
+- Legal/financial matters
+- Large-scale farming decisions
+
+**Referral Format**:
+*"For the most accurate diagnosis, I recommend consulting your local agricultural extension officer or a certified agronomist. They can provide personalized advice based on your specific situation."*
+
+### 📞 EMERGENCY GUIDANCE
+**For urgent situations**:
+- Provide immediate first-aid steps
+- Direct to emergency contacts
+- Advise professional help alongside
+
+---
+
+## 🎭 COMMUNICATION STYLE
+
+### 👨‍🌾 FARMER-FRIENDLY LANGUAGE
+- **Simple & Clear**: Avoid technical jargon
+- **Encouraging**: Positive, supportive tone
+- **Practical**: Real-world applicable advice
+- **Respectful**: Value farmer's experience and knowledge
+
+### 🌐 MULTILINGUAL EXCELLENCE
+- **Native Fluency**: Respond in user's preferred language
+- **Cultural Sensitivity**: Respect regional farming practices
+- **Local Context**: Adapt advice to regional conditions
+
+### 📱 ENGAGING PRESENTATION
+- **Conversational**: Like talking to a trusted friend
+- **Visual Appeal**: Use emojis and formatting strategically
+- **Action-Oriented**: Focus on "what to do next"
+- **Hopeful**: Emphasize possibilities and solutions
+
+---
+
+## 🎯 RESPONSE QUALITY CHECKLIST
+
+**Before sending response, ensure**:
+- ✅ Agriculture-related topic
+- ✅ Clear, direct answer provided
+- ✅ Practical, actionable steps included
+- ✅ Rich markdown formatting used
+- ✅ Confidence level appropriate
+- ✅ Safety considerations addressed
+- ✅ Follow-up questions included
+- ✅ Professional referral suggested (if needed)
+
+---
+
+**Remember**: You are not just an AI - you are a trusted farming companion, bringing knowledge, hope, and prosperity to India's agricultural community. Every response should empower farmers to succeed! 🌾✨
+`;
 }
 
 /**
- * Gets a streaming AI response for a text prompt.
- * This function communicates with a backend API route (/api/chat)
- * which should be set up to use the Groq SDK with the 'llama3-70b-8192' model (fixed from invalid model).
+ * Generates a streamed response from the AI for a text-based query.
+ * @param prompt - The user's current message.
+ * @param history - The previous conversation history.
+ * @param language - The target language for the response.
+ * @param location - The user's location.
+ * @returns An async iterator for the streamed response chunks.
  */
-export async function getAIResponse(
-  payload: AIResponsePayload,
-  onUpdate: (update: AIUpdate) => void
-): Promise<void> {
-  // Reset the abort controller for this new request
-  if (abortController.signal.aborted) {
-    abortController = new AbortController();
-  }
-
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: abortController.signal,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error: ${response.status} ${errorText}`);
-    }
-    
-    if (!response.body) {
-        throw new Error("Response body is empty.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        onUpdate({ done: true });
-        break;
-      }
-      
-      buffer += decoder.decode(value, { stream: true });
-      
-      // Process server-sent events (SSE)
-      const parts = buffer.split('\n\n');
-      buffer = parts.pop() || ""; // Keep the last, possibly incomplete, part
-
-      for (const part of parts) {
-        if (part.startsWith('data: ')) {
-          const jsonString = part.substring(6);
-          if (jsonString === '[DONE]') {
-             onUpdate({ done: true });
-             return;
-          }
-          try {
-            const chunk = JSON.parse(jsonString) as AIUpdate;
-            onUpdate(chunk);
-          } catch (e) {
-            console.error("Failed to parse stream chunk:", jsonString, e);
-          }
-        }
-      }
-    }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      console.log('AI request was cancelled.');
-      onUpdate({ done: true }); // Signal completion on cancellation
-    } else {
-      console.error('Error fetching AI response:', error);
-      throw error; // Re-throw to be caught by the component
-    }
-  }
-}
-
-// Message types
-export interface Message {
-  id: number;
-  sender: 'user' | 'ai';
-  text: string;
-  imageUrl?: string; // Optional URL for image messages
-  audioUrl?: string; // Optional URL for audio messages
-  thinking?: string; // Optional thinking process text
-}
-
-// Import the necessary types for the chat completion
-import type { ChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
-
-// Interface for streaming callbacks
-interface StreamCallbacks {
-  text?: string;
-  thinking?: string;
-  done: boolean;
-}
-
-// Type for context options
-interface ContextOptions {
-  userLanguage?: string;
-  userLocation?: string;
-  previousMessages?: { role: 'user' | 'assistant'; content: string }[];
-}
-
-// Type for streaming callbacks
-type ProgressCallback = (update: StreamCallbacks) => void;
-
-// AI Service for text-based queries
-export async function getAIResponseDirect(
-  userInput: string,
-  contextOptions?: ContextOptions,
-  onProgress?: ProgressCallback
+export async function generateTextResponse(
+  prompt: string,
+  history: any[],
+  language: string,
+  location?: string
 ) {
-  // Format previous messages for the API with correct typing
-  const previousMessages = contextOptions?.previousMessages || [];
-  
-  // System prompt for agriculture focus with multilingual
-  const systemPrompt = `
-    You are KisanSaathi, a helpful and knowledgeable assistant for Indian farmers.
-    Your goal is to provide clear, practical, and actionable advice.
-    Use simple language. Keep responses concise and to the point.
-    If asked about non-farming topics, gently steer the conversation back to agriculture.
-    ${contextOptions?.userLanguage ? `Respond in ${contextOptions.userLanguage}.` : 'Respond in English.'}
-    ${contextOptions?.userLocation ? `Consider farming practices relevant to ${contextOptions.userLocation}.` : ''}
-  `;
+  const modelWithSystemInstruction = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    systemInstruction: createSystemInstruction(language, location),
+  });
 
-  const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...previousMessages as ChatCompletionMessageParam[],
-    { role: "user", content: userInput },
-  ];
-
-  if (onProgress) {
-    // For streaming responses with callbacks
-    return await streamAIResponse(messages, onProgress);
-  }
-  
-  // For regular non-streaming responses
-  try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, dangerouslyAllowBrowser: true });
-    const chatCompletion = await groq.chat.completions.create({
-      messages: messages,
-      model: "llama3-70b-8192", // Fixed to valid model
-      temperature: 0.6,
-      max_tokens: 4096, // Fixed from max_completion_tokens
-      top_p: 0.95,
-      stream: false,
-    });
-
-    return chatCompletion.choices[0]?.message?.content || "Sorry, I could not get a response.";
-  } catch (error) {
-    console.error("Groq API Error:", error);
-    throw new Error("There was an error connecting to the AI service. Please check your API key and try again.");
-  }
-}
-
-// Stream response handler for real-time UI updates (fixed to accumulate full response)
-async function streamAIResponse(
-  messages: ChatCompletionMessageParam[],
-  onProgress?: (update: StreamCallbacks) => void
-) {
-  try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY, dangerouslyAllowBrowser: true });
-    const stream = await groq.chat.completions.create({
-      messages,
-      model: "llama3-70b-8192", // Fixed
-      temperature: 0.6,
-      max_tokens: 4096,
-      top_p: 0.95,
-      stream: true,
-    });
-
-    let fullResponse = '';
-    
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || '';
-      fullResponse += content;
-      
-      if (onProgress) {
-        onProgress({
-          text: fullResponse, // Set full to avoid duplication
-          done: false
-        });
-      }
-    }
-    
-    // Signal that we're done streaming
-    if (onProgress) {
-      onProgress({ done: true });
-    }
-    
-    return fullResponse || "Sorry, I could not get a streaming response.";
-  } catch (error) {
-    console.error("Streaming Error:", error);
-    
-    // Signal error through callback
-    if (onProgress) {
-      onProgress({
-        text: "There was an error with the streaming response.",
-        done: true
-      });
-    }
-    
-    return "There was an error with the streaming response.";
-  }
-}
-
-// Image analysis service using Gemini (since Groq doesn't support vision natively, changed to Gemini)
-export async function analyzeImage(
-  imageUrl: string,
-  prompt: string = "Analyze this farming image and describe what you see",
-  language: string = "English",
-  onProgress?: ProgressCallback
-) {
-  try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: `Respond in ${language}.` 
-    });
-
-    const imageParts = [{
-      inlineData: {
-        data: imageUrl.split(',')[1], // Assume base64
-        mimeType: 'image/jpeg' // Assume
-      }
-    }];
-
-    // Handle streaming vs non-streaming
-    if (onProgress) {
-      try {
-        // Use non-streaming API for simplicity, but simulate streaming for UI
-        const response = await model.generateContent([prompt, ...imageParts]);
-        const fullText = response.response.text() || "Sorry, I couldn't analyze this image.";
-        
-        // Simulate streaming by sending chunks of text with small delays
-        const chunks = fullText.match(/.{1,20}/g) || [];
-        let processedText = '';
-        
-        for (const chunk of chunks) {
-          processedText += chunk;
-          onProgress({
-            text: processedText,
-            done: false
-          });
-          
-          // Small delay to simulate streaming
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-        
-        onProgress({ done: true });
-        return fullText;
-      } catch (streamError) {
-        console.error("Image analysis error:", streamError);
-        onProgress({
-          text: "Error analyzing the image.",
-          done: true
-        });
-        return "Error analyzing the image.";
-      }
-    } else {
-      // Non-streaming response
-      const response = await model.generateContent([prompt, ...imageParts]);
-      return response.response.text() || "Sorry, I couldn't analyze this image.";
-    }
-  } catch (error) {
-    console.error("Image Analysis Error:", error);
-    
-    if (onProgress) {
-      onProgress({
-        text: "There was an error analyzing the image.",
-        done: true
-      });
-    }
-    
-    throw new Error("There was an error analyzing the image. Please try again.");
-  }
+  const chat = modelWithSystemInstruction.startChat({ history });
+  const result = await chat.sendMessageStream(prompt);
+  return result.stream;
 }
