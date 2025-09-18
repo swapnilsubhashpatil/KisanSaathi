@@ -13,14 +13,6 @@
     flex-direction: column; /* Ensure body uses flex for layout */
   }
 
-  /* Apply scrolling to the main content area instead */
-  main {
-    flex: 1; /* Allow main to take available space */
-    overflow-y: auto; /* Enable vertical scrolling for messages */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
-    padding-bottom: 60px; /* Ensure space for footer/input */
-  }
-
   /* Custom scrollbar for a cleaner look */
   ::-webkit-scrollbar {
     width: 8px;
