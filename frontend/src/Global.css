@@ -2,15 +2,25 @@
 
 @layer base {
   html, body, #root {
-    height: 100vh;
-    overflow: hidden; /* Prevents double scrollbars on mobile */
-  }
-
-  body {
+    height: 100%; /* Remove fixed 100vh to allow flexibility */
+    min-height: 100vh; /* Ensure it covers the full viewport at minimum */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
+  body {
+    display: flex;
+    flex-direction: column; /* Ensure body uses flex for layout */
+  }
+
+  /* Apply scrolling to the main content area instead */
+  main {
+    flex: 1; /* Allow main to take available space */
+    overflow-y: auto; /* Enable vertical scrolling for messages */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+    padding-bottom: 60px; /* Ensure space for footer/input */
+  }
+
   /* Custom scrollbar for a cleaner look */
   ::-webkit-scrollbar {
     width: 8px;
