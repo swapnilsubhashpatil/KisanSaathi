@@ -479,7 +479,13 @@ export default function ChatPage() {
     if (!file.type.startsWith('image/')) { setError("Please select a valid image file."); return; }
     if (file.size > 10 * 1024 * 1024) { setError("Image file too large (max 10MB)."); return; }
     const reader = new FileReader();
-    reader.onloadend = () => setUploadedImage(reader.result as string);
+    reader.onloadend = () => {
+      setUploadedImage(reader.result as string);
+      // Reset the file input to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
     reader.onerror = () => setError("Failed to read image file.");
     reader.readAsDataURL(file);
   };
@@ -590,7 +596,7 @@ export default function ChatPage() {
         </motion.header>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-32 pb-48 md:pb-52 relative z-10">
+      <main className="flex-1 overflow-y-auto scrollbar-hide p-6 space-y-6 pt-32 pb-48 md:pb-52 relative z-10">
         {/* Chat Background Overlay */}
         <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] pointer-events-none rounded-2xl mx-2 my-4"></div>
         {messages.map((message) => (
@@ -739,24 +745,6 @@ export default function ChatPage() {
                 ))}
               </div>
             </motion.div>
-
-            {/* Subtle Footer */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="text-center mt-8"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50/80 backdrop-blur-sm rounded-full border border-gray-200/50">
-                <span className="text-xs text-gray-500 font-medium">
-                  {selectedLanguage === 'en-US' ? 'Powered by advanced AI' : 'उन्नत AI द्वारा संचालित'}
-                </span>
-                <span className="text-gray-300">•</span>
-                <span className="text-xs text-gray-500 font-medium">
-                  {selectedLanguage === 'en-US' ? '8 languages supported' : '8 भाषाओं का समर्थन'}
-                </span>
-              </div>
-            </motion.div>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -817,7 +805,7 @@ export default function ChatPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                        className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg p-2 z-10"
                       >
                         <button
                           onClick={() => handleAttachmentClick('gallery')}
@@ -874,7 +862,7 @@ export default function ChatPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                          className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg p-2 z-10"
                         >
                           <button
                             onClick={() => handleAttachmentClick('gallery')}
