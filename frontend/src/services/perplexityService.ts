@@ -62,7 +62,9 @@ export interface PerplexityResponse {
 
 export async function generatePerplexityResponse(
   messages: PerplexityMessage[],
-  options: PerplexityOptions = {}
+  options: PerplexityOptions = {},
+  chatHistory?: Array<{sender: string, text: string, timestamp: string}>,
+  language?: string
 ) {
   const {
     model = 'sonar-reasoning',
@@ -77,9 +79,26 @@ export async function generatePerplexityResponse(
     return_related_questions = false,
   } = options;
 
+  // Create system message with context
+  const systemMessage: PerplexityMessage = {
+    role: 'system',
+    content: `You are KisanSaathi, an agricultural AI assistant. Focus on agriculture-related topics only. If the query is not related to agriculture, politely decline and redirect to farming topics.
+
+Language: ${language || 'English'}
+
+STRICT LANGUAGE REQUIREMENT: You MUST respond ONLY in ${language || 'English'}. Do not mix languages or respond in any other language. If the user asks in ${language || 'English'}, answer in ${language || 'English'} only.
+
+Conversation History:
+${chatHistory && chatHistory.length > 0 ? chatHistory.map(msg => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`).join('\n') : 'No previous conversation.'}
+
+Remember: Only answer agriculture-related questions. For non-agriculture topics, respond: "I'm sorry, but as KisanSaathi, my expertise is dedicated exclusively to agriculture and farming. I'd be happy to help you with any farming-related questions you might have!"`
+  };
+
+  const messagesWithSystem = [systemMessage, ...messages];
+
   const requestBody = {
     model,
-    messages,
+    messages: messagesWithSystem,
     temperature,
     max_tokens,
     top_p,
@@ -120,7 +139,9 @@ export async function generatePerplexityResponse(
 
 export async function generatePerplexitySearchResponse(
   messages: PerplexityMessage[],
-  options: PerplexityOptions = {}
+  options: PerplexityOptions = {},
+  chatHistory?: Array<{sender: string, text: string, timestamp: string}>,
+  language?: string
 ): Promise<PerplexityResponse> {
   const {
     model = 'sonar',
@@ -134,9 +155,26 @@ export async function generatePerplexitySearchResponse(
     return_related_questions = false,
   } = options;
 
+  // Create system message with context
+  const systemMessage: PerplexityMessage = {
+    role: 'system',
+    content: `You are KisanSaathi, an agricultural AI assistant. Focus on agriculture-related topics only. If the query is not related to agriculture, politely decline and redirect to farming topics.
+
+Language: ${language || 'English'}
+
+STRICT LANGUAGE REQUIREMENT: You MUST respond ONLY in ${language || 'English'}. Do not mix languages or respond in any other language. If the user asks in ${language || 'English'}, answer in ${language || 'English'} only.
+
+Conversation History:
+${chatHistory && chatHistory.length > 0 ? chatHistory.map(msg => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`).join('\n') : 'No previous conversation.'}
+
+Remember: Only answer agriculture-related questions. For non-agriculture topics, respond: "I'm sorry, but as KisanSaathi, my expertise is dedicated exclusively to agriculture and farming. I'd be happy to help you with any farming-related questions you might have!"`
+  };
+
+  const messagesWithSystem = [systemMessage, ...messages];
+
   const requestBody = {
     model,
-    messages,
+    messages: messagesWithSystem,
     temperature,
     max_tokens,
     top_p,

@@ -18,16 +18,32 @@ export async function generateThinkingResponse(
   options: {
     model?: string;
     temperature?: number;
-  } = {}
+  } = {},
+  chatHistory?: Array<{sender: string, text: string, timestamp: string}>,
+  language?: string
 ): Promise<ThinkingResponse> {
   const { model = "qwen/qwen3-32b", temperature = 0.6 } = options;
+
+  // Create enhanced prompt with context
+  const systemContext = `You are KisanSaathi, an agricultural AI assistant. Focus on agriculture-related topics only. If the query is not related to agriculture, politely decline and redirect to farming topics.
+
+Language: ${language || 'English'}
+
+STRICT LANGUAGE REQUIREMENT: You MUST respond ONLY in ${language || 'English'}. Do not mix languages or respond in any other language. If the user asks in ${language || 'English'}, answer in ${language || 'English'} only.
+
+Conversation History:
+${chatHistory && chatHistory.length > 0 ? chatHistory.map(msg => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`).join('\n') : 'No previous conversation.'}
+
+Remember: Only answer agriculture-related questions. For non-agriculture topics, respond: "I'm sorry, but as KisanSaathi, my expertise is dedicated exclusively to agriculture and farming. I'd be happy to help you with any farming-related questions you might have!"
+
+User Query: ${prompt}`;
 
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "user",
-          content: prompt
+          content: systemContext
         }
       ],
       model,

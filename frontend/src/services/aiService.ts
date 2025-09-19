@@ -10,7 +10,7 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
  * @param location - The user's location for context-specific advice.
  * @returns A formatted system instruction string.
  */
-function createSystemInstruction(language: string, location?: string): string {
+function createSystemInstruction(language: string, location?: string, chatHistory?: Array<{sender: string, text: string, timestamp: string}>): string {
   return `
 # 🌾 KISANSAATHI - Your Expert Agricultural Companion 🌾
 
@@ -25,6 +25,9 @@ Transform farming challenges into opportunities through expert guidance, practic
 - **Location**: ${location || "India (General)"}
 - **Language**: ${language}
 - **Target Audience**: Indian farmers, agricultural entrepreneurs, and rural communities
+
+## 💬 CONVERSATION HISTORY
+${chatHistory && chatHistory.length > 0 ? chatHistory.map(msg => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`).join('\n') : 'No previous conversation.'}
 
 ---
 
@@ -144,6 +147,7 @@ Start with a **clear, direct answer** to the main question.
 - **Native Fluency**: Respond in user's preferred language
 - **Cultural Sensitivity**: Respect regional farming practices
 - **Local Context**: Adapt advice to regional conditions
+- **STRICT LANGUAGE REQUIREMENT**: You MUST respond ONLY in ${language}. Do not mix languages or respond in any other language. If the user asks in ${language}, answer in ${language} only.
 
 ### 📱 ENGAGING PRESENTATION
 - **Conversational**: Like talking to a trusted friend
@@ -185,9 +189,16 @@ export async function generateTextResponse(
   language: string,
   location?: string
 ) {
+  // Convert history to our format for system instruction
+  const chatHistory = history.map(h => ({
+    sender: h.role === 'user' ? 'user' : 'assistant',
+    text: h.parts[0]?.text || '',
+    timestamp: new Date().toISOString() // Placeholder, since original doesn't have timestamp
+  }));
+
   const modelWithSystemInstruction = genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
-    systemInstruction: createSystemInstruction(language, location),
+    systemInstruction: createSystemInstruction(language, location, chatHistory),
   });
 
   const chat = modelWithSystemInstruction.startChat({ history });

@@ -22,9 +22,10 @@ import { generateThinkingResponse, type ThinkingResponse } from "./services/thin
 */
 
 export type Message = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
+  id: string;
+  sender: "user" | "assistant";
+  text: string;
+  timestamp: string;
   imageUrl?: string | null;
   suggestions?: string[];
   searchResults?: Array<{
@@ -56,15 +57,48 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
 ];
 
 export const INITIAL_SUGGESTIONS: { [key: string]: string[] } = {
-    'en-US': ["Best crops for summer?", "How to treat leaf curl disease?", "Organic fertilizer tips"],
-    'hi-IN': ["गर्मी के लिए सबसे अच्छी फसलें?", "पत्ती मोड़क रोग का इलाज कैसे करें?", "जैविक खाद के टिप्स"],
-    'ta-IN': ["கோடைக்கு சிறந்த பயிர்கள்?", "இலை சுருட்டு நோயை எவ்வாறு குணப்படுத்துவது?", "இயற்கை உரக் குறிப்புகள்"],
-    'te-IN': ["వేసవికి ఉత్తమ పంటలు?", "ఆకు ముడత వ్యాధిని ఎలా నయం చేయాలి?", "సేంద్రీయ ఎరువుల చిట్కాలు"],
-    'kn-IN': ["ಬೇಸಿಗೆಗೆ ಉತ್ತಮ ಬೆಳೆಗಳು?", "ಎಲೆ ಸುರುಳಿ ರೋಗವನ್ನು ಹೇಗೆ ಗುಣಪಡಿಸುವುದು?", "ಸಾವಯವ ಗೊಬ್ಬರದ ಸಲಹೆಗಳು"],
-    'ml-IN': ["വേനൽക്കാലത്ത് മികച്ച വിളകൾ?", "ഇല ചുരുളൽ രോഗം എങ്ങനെ ചികിത്സിക്കാം?", "ജൈവ വളപ്രയോഗത്തിനുള്ള നുറുങ്ങുകൾ"],
-    'mr-IN': ["उन्हाळ्यासाठी सर्वोत्तम पिके?", "पाने कुरूप होण्याच्या रोगावर उपचार कसे करावे?", "सेंद्रिय खताच्या टिप्स"],
-    'gu-IN': ["ઉનાળા માટે શ્રેષ્ઠ પાક?", "પાન વાળવાના રોગનો ઉપચાર કેવી રીતે કરવો?", "ઓર્ગેનિક ખાતર ટિપ્સ"],
+  'en-US': [
+    "When is the best time to sow groundnut this season?",
+    "How much urea and DAP should I use for 1 acre of paddy?",
+    "How can I apply for PM-Kisan Samman Nidhi?",
+  ],
+  'hi-IN': [
+    "इस मौसम में मूंगफली बोने का सबसे अच्छा समय कब है?",
+    "१ एकड़ धान के लिए मुझे कितनी यूरिया और डीएपी चाहिए?",
+    "मैं पीएम-किसान सम्मान निधि के लिए आवेदन कैसे कर सकता हूं?",
+  ],
+  'ta-IN': [
+    "இந்த பருவத்தில் நிலக்கடலை விதைக்கும் சிறந்த நேரம் எது?",
+    "ஒரு ஏக்கர் பச்சரிசிக்கு எவ்வளவு யூரியா மற்றும் DAP பயன்படுத்த வேண்டும்?",
+    "PM-Kisan Samman Nidhi-க்கு நான் எப்படி விண்ணப்பிப்பது?",
+  ],
+  'te-IN': [
+    "ఈ సీజన్‌లో పల్లీ విత్తడానికి ఉత్తమ సమయం ఏది?",
+    "ఒక ఎకరంలో వరి కోసం ఎంత యూరియా మరియు DAP ఉపయోగించాలి?",
+    "PM-Kisan Samman Nidhi కి ఎలా అప్లై చేయాలి?",
+  ],
+  'kn-IN': [
+    "ಈ ಸೀಸನ್ನಲ್ಲಿ ಕಡಲೆಕಾಯಿ ಬಿತ್ತನೆಗೆ ಸೂಕ್ತ ಸಮಯ ಯಾವುದು?",
+    "ಒಂದು ಎಕರೆ ಅಕ್ಕಿಗೆ ಎಷ್ಟು ಯೂರಿಯಾ ಮತ್ತು ಡಿಯ್ಯಾಪಿ ಬೇಕು?",
+    "ನಾನು ಹೇಗೆ PM-Kisan Samman Nidhi ಗೆ ಅರ್ಜಿ ಹಾಕಬಹುದು?",
+  ],
+  'ml-IN': [
+    "ഈ സീസണിൽ നാളികേരം തൈവയ്ക്കാൻ എപ്പോൾ ഏറ്റവും നല്ല സമയം?",
+    "ഒരു ഏക്കർ നെല്ലിന് എത്രയ്യൂറിയയും DAPഉം ഉപയോഗിക്കണം?",
+    "PM-Kisan Samman Nidhiക്കായി എങ്ങനെ അപേക്ഷിക്കാം?",
+  ],
+  'mr-IN': [
+    "या हंगामात शेंगदाणा पेरण्यासाठी सर्वोत्तम वेळ कोणता?",
+    "१ एकर भातासाठी किती युरिया आणि डीएपी वापरावे?",
+    "पीएम-किसान सन्मान निधीसाठी मी कसा अर्ज करू?",
+  ],
+  'gu-IN': [
+    "આ સીઝનમાં ભૂંગળી વાવવા માટે શ્રેષ્ઠ સમય કયો છે?",
+    "એક એકર ભાથ માટે કેટલોક યુરિયા અને DAP જોઈએ?",
+    "હું PM-Kisan Samman Nidhi માટે કેવી રીતે અરજી કરી શકું?",
+  ],
 };
+
 
 
 // --- UI COMPONENTS (Keep as is) ---
@@ -96,6 +130,11 @@ const TypingIndicator = () => (
 // --- CHAT PERSISTENCE FUNCTIONS ---
 const CHAT_STORAGE_KEY = 'kisanSaathi_chat_history';
 
+// Function to generate unique message ID
+const generateMessageId = (): string => {
+  return crypto.randomUUID ? crypto.randomUUID() : `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 const saveChatHistory = (messages: Message[]) => {
   try {
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
@@ -107,7 +146,25 @@ const saveChatHistory = (messages: Message[]) => {
 const loadChatHistory = (): Message[] => {
   try {
     const saved = localStorage.getItem(CHAT_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    // Migrate old format to new format
+    return parsed.map((msg: any) => {
+      if (msg.role && msg.content) {
+        // Old format
+        return {
+          id: msg.id ? msg.id.toString() : generateMessageId(),
+          sender: msg.role,
+          text: msg.content,
+          timestamp: msg.timestamp || new Date().toISOString(),
+          imageUrl: msg.imageUrl,
+          suggestions: msg.suggestions,
+          searchResults: msg.searchResults,
+          thinking: msg.thinking,
+        };
+      }
+      return msg; // Already new format
+    });
   } catch (error) {
     console.warn('Failed to load chat history:', error);
     return [];
@@ -127,9 +184,9 @@ const cleanMarkdownForSpeech = (text: string): string => {
   let cleaned = text
     .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold **text**
     .replace(/\*(.*?)\*/g, '$1')     // Remove italic *text*
-    .replace(/```.*?```/gs, '')      // Remove code blocks
+    .replace(/```.*?```/gs, '')       // Remove code blocks
     .replace(/`(.*?)`/g, '$1')       // Remove inline code
-    .replace(/#{1,6}\s*/g, '')       // Remove headers
+    .replace(/#{1,6}\s*/g, '')        // Remove headers
     .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links, keep text
     .replace(/^\s*[-*+]\s+/gm, '')   // Remove list markers
     .replace(/^\s*\d+\.\s+/gm, '')   // Remove numbered list markers
@@ -168,8 +225,8 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
-  const [generatingAudioId, setGeneratingAudioId] = useState<number | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [generatingAudioId, setGeneratingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
@@ -180,6 +237,8 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
+  const attachmentMenuRef = useRef<HTMLDivElement>(null);
   const [useSearch, setUseSearch] = useState<boolean>(false); // Toggle search on/off
   const [useThinking, setUseThinking] = useState<boolean>(false); // Toggle thinking on/off
   const [showThinkingDrawer, setShowThinkingDrawer] = useState<boolean>(false); // Show/hide thinking drawer
@@ -189,9 +248,9 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    // Only set welcome message if there are no messages or only one welcome message
-    if (messages.length === 0 || (messages.length === 1 && messages[0].role === "assistant")) {
-      setMessages([{ id: Date.now(), role: "assistant", content: getLanguageDetails(selectedLanguage).welcome }]);
+    // Only set welcome message if there are no messages
+    if (messages.length === 0) {
+      setMessages([]);
     }
     setUploadedImage(null);
     setError(null);
@@ -220,20 +279,54 @@ export default function ChatPage() {
     };
   }, []);
 
+  // Handle click outside for language dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setShowLangDropdown(false);
+      }
+    };
+
+    if (showLangDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showLangDropdown]);
+
+  // Handle click outside for attachment menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (attachmentMenuRef.current && !attachmentMenuRef.current.contains(event.target as Node)) {
+        setShowAttachmentMenu(false);
+      }
+    };
+
+    if (showAttachmentMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAttachmentMenu]);
+
   async function handleSendMessage(messageText?: string) {
     const currentInput = (messageText || input).trim();
     if (!currentInput && !uploadedImage) return;
 
     setIsStreaming(true);
     setError(null);
-    const userMessageId = Date.now();
-    const assistantMessageId = userMessageId + 1;
+    const userMessageId = generateMessageId();
+    const assistantMessageId = generateMessageId();
     const userImage = uploadedImage;
 
     setMessages(prev => [
       ...prev,
-      { id: userMessageId, role: "user", content: currentInput, imageUrl: userImage },
-      { id: assistantMessageId, role: "assistant", content: "" }
+      { id: userMessageId, sender: "user", text: currentInput, timestamp: new Date().toISOString(), imageUrl: userImage },
+      { id: assistantMessageId, sender: "assistant", text: "", timestamp: new Date().toISOString() }
     ]);
     setInput("");
     setUploadedImage(null);
@@ -241,10 +334,10 @@ export default function ChatPage() {
     try {
       // **IMPROVEMENT: CONTEXT MANAGEMENT**
       let history: any[] = messages
-        .filter(m => m.content && m.id !== assistantMessageId) // Ensure content exists and exclude current assistant message
+        .filter(m => m.text && m.id !== assistantMessageId) // Ensure text exists and exclude current assistant message
         .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
+          role: m.sender === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.text }]
         }));
 
       // Ensure history starts with user message (Google AI requirement)
@@ -260,16 +353,17 @@ export default function ChatPage() {
           )
         : useThinking
         ? await generateThinkingResponse(
-            `You are a helpful assistant specializing in agriculture. Provide accurate, practical information for farmers.\n\nUser question: ${currentInput}`,
+            currentInput,
             {
               model: 'qwen/qwen3-32b',
               temperature: 0.6,
-            }
+            },
+            messages.map(m => ({ sender: m.sender, text: m.text, timestamp: m.timestamp })),
+            selectedLanguage
           )
         : useSearch
         ? await generatePerplexitySearchResponse(
             convertToPerplexityMessages([
-              { role: 'system', content: 'You are a helpful assistant specializing in agriculture. Provide accurate, practical information for farmers.' },
               { role: 'user', content: currentInput }
             ]),
             {
@@ -277,7 +371,9 @@ export default function ChatPage() {
               temperature: 0.2,
               max_tokens: 2048,
               stream: false,
-            }
+            },
+            messages.map(m => ({ sender: m.sender, text: m.text, timestamp: m.timestamp })),
+            selectedLanguage
           )
         : await generateTextResponse(
             currentInput,
@@ -293,7 +389,7 @@ export default function ChatPage() {
         fullResponse = thinkingResponse.answer;
         setMessages(prev => prev.map(m => m.id === assistantMessageId ? { 
           ...m, 
-          content: fullResponse,
+          text: fullResponse,
           thinking: thinkingResponse.thoughts
         } : m));
       } else if (useSearch && !userImage) {
@@ -302,7 +398,7 @@ export default function ChatPage() {
         fullResponse = responseData.choices[0].message.content;
         setMessages(prev => prev.map(m => m.id === assistantMessageId ? { 
           ...m, 
-          content: fullResponse,
+          text: fullResponse,
           searchResults: responseData.search_results
         } : m));
       } else {
@@ -311,18 +407,18 @@ export default function ChatPage() {
         for await (const chunk of streamingResponse) {
           const chunkText = chunk.text();
           fullResponse += chunkText;
-          setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: fullResponse } : m));
+          setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, text: fullResponse } : m));
         }
       }
 
       // Extract suggestions (only for Google AI responses)
       const suggestions = !useSearch && !userImage ? fullResponse.match(/>> .*/g)?.map(s => s.substring(3).trim()) || [] : [];
       const responseText = !useSearch && !userImage ? fullResponse.split('>>')[0].trim() : fullResponse;
-      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: responseText, suggestions } : m));
+      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, text: responseText, suggestions } : m));
 
     } catch (err: any) {
       setError((err as Error).message || "An unknown error occurred.");
-      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: "Sorry, I couldn't get a response due to an error." } : m));
+      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, text: "Sorry, I couldn't get a response due to an error." } : m));
     } finally {
       setIsStreaming(false);
     }
@@ -342,7 +438,7 @@ export default function ChatPage() {
 
     try {
       // **IMPROVEMENT: Using the TTS service with cleaned text**
-      const cleanedContent = cleanMarkdownForSpeech(message.content);
+      const cleanedContent = cleanMarkdownForSpeech(message.text);
       const audioElement = await synthesizeSpeech(cleanedContent, selectedLanguage);
       audioRef.current = audioElement;
       audioRef.current.play();
@@ -421,75 +517,95 @@ export default function ChatPage() {
 
   // --- MAIN RENDER ---
   return (
-    <div className="flex flex-col h-screen bg-gray-100 font-sans">
-      {/* Header remains the same */}
-      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 text-white bg-gradient-to-r from-green-600 to-green-800 shadow-md z-20">
-        <div className="flex items-center gap-3">
-          <img src="/KisanSaathi.png" alt="KisanSaathi" className="h-12 object-contain" />
-          <h1 className="text-2xl font-bold tracking-wide" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            <span className="text-yellow-300">Kisan</span>
-            <span className="text-white">Saathi</span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Button
-              onClick={() => setShowLangDropdown(prev => !prev)}
-              className="p-2 bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Globe className="w-5 h-5 mr-2" />
-              {getLanguageDetails(selectedLanguage).nativeName}
-            </Button>
-            {showLangDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto z-30">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setSelectedLanguage(lang.code);
-                      localStorage.setItem('kisanSaathi_language', lang.code);
-                      setShowLangDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                      selectedLanguage === lang.code ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                    }`}
-                  >
-                    {lang.nativeName} ({lang.name})
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <Button
-            onClick={() => {
-              clearChatHistory();
-              setMessages([{ id: Date.now(), role: "assistant", content: getLanguageDetails(selectedLanguage).welcome }]);
-              setInput("");
-              setUploadedImage(null);
-              setError(null);
-              setPlayingAudioId(null);
-            }}
-            className="p-2 bg-white/20 hover:bg-white/30 text-white border-white/30"
-          >
-            <Trash2 className="w-5 h-5" />
-          </Button>
-        </div>
-      </header>
+    <div className="flex flex-col h-screen bg-white font-sans relative overflow-hidden">
+      {/* Agriculture Doodle Background */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-5"
+        style={{
+          backgroundImage: 'url("/doodle.svg")',
+          backgroundRepeat: 'repeat',
+          backgroundSize: 'auto'
+        }}
+      />
 
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-28 pb-24 md:pb-6">
+      {/* --- FLOATING HEADER CONTAINER --- */}
+      {/* FIX 1: Increased opacity and blur to hide text behind */}
+      <div className="fixed top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none bg-white/95 backdrop-blur-xl">
+        <motion.header
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="relative w-full max-w-screen-2xl mx-auto flex justify-between items-center p-3 md:p-4 bg-white/90 rounded-2xl shadow-xl border border-gray-200/50 pointer-events-auto"
+        >
+          <div className="flex items-center gap-3">
+            <img src="/KisanSaathi.png" alt="KisanSaathi" className="h-12 object-contain" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-wide text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <span className="text-green-600">Kisan</span>
+              <span>Saathi</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={langDropdownRef}>
+              <Button
+                onClick={() => setShowLangDropdown(prev => !prev)}
+                className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200"
+              >
+                <Globe className="w-5 h-5 mr-2" />
+                {getLanguageDetails(selectedLanguage).nativeName}
+              </Button>
+              {showLangDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto z-30">
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setSelectedLanguage(lang.code);
+                        localStorage.setItem('kisanSaathi_language', lang.code);
+                        setShowLangDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                        selectedLanguage === lang.code ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                      }`}
+                    >
+                      {lang.nativeName} ({lang.name})
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={() => {
+                clearChatHistory();
+                setMessages([]);
+                setInput("");
+                setUploadedImage(null);
+                setError(null);
+                setPlayingAudioId(null);
+              }}
+              className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200"
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+          </div>
+        </motion.header>
+      </div>
+
+      <main className="flex-1 overflow-y-auto p-6 space-y-6 pt-32 pb-48 md:pb-52 relative z-10">
+        {/* Chat Background Overlay */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] pointer-events-none rounded-2xl mx-2 my-4"></div>
         {messages.map((message) => (
           <motion.div
             key={message.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex items-start gap-3 max-w-2xl ${message.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
+            className={`flex items-start gap-3 max-w-2xl ${message.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
           >
-            <div className={`flex flex-col w-full ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`relative px-4 py-3 rounded-2xl ${message.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-sm'}`}>
+            <div className={`flex flex-col w-full ${message.sender === 'user' ? 'items-end' : 'items-start'}`}>
+              <div className={`relative px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm ${message.sender === 'user' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none border border-blue-400/30' : 'bg-white/95 text-gray-800 rounded-bl-none border border-white/40'}`}>
                 {message.imageUrl && <img src={message.imageUrl} alt="User upload" className="mb-2 rounded-lg max-h-48" />}
                 
                 {/* Show thinking drawer above the answer for assistant messages */}
-                {message.role === 'assistant' && message.thinking && message.thinking.trim() && !isStreaming && (
+                {message.sender === 'assistant' && message.thinking && message.thinking.trim() && !isStreaming && (
                   <div className="mb-3">
                     <button
                       onClick={() => setShowThinkingDrawer(!showThinkingDrawer)}
@@ -516,10 +632,10 @@ export default function ChatPage() {
                   </div>
                 )}
                 
-                {isStreaming && message.content === "" && message.role === 'assistant' ? <TypingIndicator /> : <MarkdownMessage content={message.content} />}
+                {isStreaming && message.text === "" && message.sender === 'assistant' ? <TypingIndicator /> : <MarkdownMessage content={message.text} />}
                 
                 {/* **IMPROVEMENT: SPEAK BUTTON PLACEMENT** */}
-                {message.role === 'assistant' && message.content && !isStreaming && (
+                {message.sender === 'assistant' && message.text && !isStreaming && (
                   <Button onClick={() => handlePlayAudio(message)} className="absolute -bottom-3 -right-3 p-1.5 bg-white rounded-full shadow border hover:bg-gray-100 transition-colors">
                     {generatingAudioId === message.id ? <TypingIndicator /> : (playingAudioId === message.id ? <StopCircle className="w-5 h-5 text-red-500" /> : <PlayCircle className="w-5 h-5 text-green-600" />)}
                   </Button>
@@ -527,13 +643,16 @@ export default function ChatPage() {
               </div>
               
               {message.suggestions && message.suggestions.length > 0 && !isStreaming && (
-                <div className="mt-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-                  <div className="text-sm font-medium text-green-800 mb-2">💡 Follow-up questions:</div>
-                  <ul className="space-y-1">
+                <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200/50 shadow-sm backdrop-blur-sm">
+                  <div className="text-sm font-medium text-green-800 mb-3 flex items-center gap-2">
+                    <span className="text-lg">💡</span>
+                    {selectedLanguage === 'en-US' ? 'Follow-up questions:' : 'अनुवर्ती प्रश्न:'}
+                  </div>
+                  <ul className="space-y-2">
                     {message.suggestions.map((s, i) => (
-                      <li key={i} className="text-sm text-green-700 flex items-start">
-                        <span className="text-green-500 mr-2">•</span>
-                        {s}
+                      <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span className="leading-relaxed">{s}</span>
                       </li>
                     ))}
                   </ul>
@@ -542,16 +661,19 @@ export default function ChatPage() {
 
               {/* Display search results for Perplexity responses */}
               {message.searchResults && message.searchResults.length > 0 && !isStreaming && (
-                <div className="mt-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-                  <div className="text-sm font-medium text-purple-800 mb-2">📚 Search Results:</div>
-                  <ul className="space-y-2">
+                <div className="mt-3 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200/50 shadow-sm backdrop-blur-sm">
+                  <div className="text-sm font-medium text-purple-800 mb-3 flex items-center gap-2">
+                    <span className="text-lg">📚</span>
+                    {selectedLanguage === 'en-US' ? 'Search Results:' : 'खोज परिणाम:'}
+                  </div>
+                  <ul className="space-y-3">
                     {message.searchResults.map((result, i) => (
                       <li key={i} className="text-sm">
-                        <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline font-medium">
+                        <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:text-purple-800 font-medium hover:underline transition-colors">
                           {result.title}
                         </a>
-                        <p className="text-gray-600 mt-1">{result.snippet}</p>
-                        {result.date && <p className="text-xs text-gray-500 mt-1">Date: {result.date}</p>}
+                        <p className="text-gray-600 mt-1 leading-relaxed">{result.snippet}</p>
+                        {result.date && <p className="text-xs text-gray-500 mt-2">📅 {result.date}</p>}
                       </li>
                     ))}
                   </ul>
@@ -560,207 +682,278 @@ export default function ChatPage() {
             </div>
           </motion.div>
         ))}
-        {/* Initial Suggestions remain the same */}
-        {messages.length <= 1 && !isStreaming && (
-          <div className="flex flex-wrap gap-2 md:gap-3 justify-center items-center pt-8">
-            {(INITIAL_SUGGESTIONS[selectedLanguage] || INITIAL_SUGGESTIONS['en-US']).map((suggestion, i) => (
-              <motion.button
-                key={i}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className="text-sm px-4 py-2 bg-white border border-gray-300/80 text-gray-700 rounded-xl hover:bg-gray-200/60 transition-all shadow-sm"
-              >
-                {suggestion}
-              </motion.button>
-            ))}
+        {/* Apple-inspired Welcome Interface */}
+        {messages.length === 0 && !isStreaming && (
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] max-h-screen space-y-6 relative z-10 px-4 md:px-6">
+            {/* Clean Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-center space-y-4 max-w-lg"
+            >
+              <div className="flex justify-center">
+                <div className="p-4 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-xl">
+                  <img src="/KisanSaathi.png" alt="KisanSaathi" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
+                  {selectedLanguage === 'en-US' ? 'KisanSaathi' : 'किसान साथी'}
+                </h1>
+                <p className="text-lg text-gray-600 leading-relaxed font-light">
+                  {selectedLanguage === 'en-US' ? 'Your AI farming companion' : 'आपका AI कृषि साथी'}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Quick Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+              className="w-full max-w-md space-y-3"
+            >
+              <div className="text-center mb-2">
+                <p className="text-gray-500 text-sm font-medium">
+                  {selectedLanguage === 'en-US' ? 'Get started with these questions' : 'इन प्रश्नों के साथ शुरू करें'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {(INITIAL_SUGGESTIONS[selectedLanguage] || INITIAL_SUGGESTIONS['en-US']).slice(0, 3).map((suggestion, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 + (i * 0.1) }}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full text-left p-3 sm:p-4 bg-white/80 backdrop-blur-xl border border-gray-200/50 text-gray-700 rounded-xl hover:bg-white hover:shadow-lg hover:border-gray-300 transition-all duration-300 shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <span className="text-green-600 font-semibold text-base">{i + 1}</span>
+                      </div>
+                      <span className="text-sm leading-relaxed font-medium line-clamp-2">{suggestion}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Subtle Footer */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              className="text-center mt-8"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50/80 backdrop-blur-sm rounded-full border border-gray-200/50">
+                <span className="text-xs text-gray-500 font-medium">
+                  {selectedLanguage === 'en-US' ? 'Powered by advanced AI' : 'उन्नत AI द्वारा संचालित'}
+                </span>
+                <span className="text-gray-300">•</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  {selectedLanguage === 'en-US' ? '8 languages supported' : '8 भाषाओं का समर्थन'}
+                </span>
+              </div>
+            </motion.div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </main>
 
-      {/* Footer remains the same */}
-      <footer className="fixed bottom-0 left-0 right-0 md:relative md:flex-shrink-0 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200 z-10">
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-2 p-3 text-sm text-red-800 bg-red-100 rounded-xl flex justify-between items-center"
-            >
-              <span>{error}</span>
-              <button onClick={() => setError(null)}>
-                <X size={18} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {isTranscribing && (
-          <div className="flex items-center justify-center text-sm text-gray-600 mb-2">
-            <TypingIndicator /> Transcribing audio... please wait.
-          </div>
-        )}
-        {uploadedImage && (
-          <div className="mb-2 p-2 bg-gray-100 rounded-xl flex items-center gap-2">
-            <img src={uploadedImage} alt="Preview" className="h-10 w-10 rounded-lg object-cover" />
-            <span className="text-sm flex-1">Image will be sent with your message.</span>
-            <button onClick={() => setUploadedImage(null)}>
-              <X size={18} className="text-red-500" />
-            </button>
-          </div>
-        )}
-        <div className="flex flex-col gap-2">
-          {/* Tools row - appears above input on mobile, inline on desktop */}
-          <div className="flex items-center gap-2 sm:hidden">
-            <div className="relative">
-              <Button
-                onClick={() => setShowAttachmentMenu(prev => !prev)}
-                className="p-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
-              >
-                <Paperclip size={18} />
-              </Button>
-              <AnimatePresence>
-                {showAttachmentMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
-                  >
-                    <button
-                      onClick={() => handleAttachmentClick('gallery')}
-                      className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                    >
-                      <ImageUp size={20} /> From Gallery
-                    </button>
-                    <button
-                      onClick={() => handleAttachmentClick('camera')}
-                      className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                    >
-                      <Camera size={20} /> Take Photo
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <Button
-              onClick={() => {
-                setUseSearch(!useSearch);
-                if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
-              }}
-              className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-              title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-            <Button
-              onClick={() => {
-                setUseThinking(!useThinking);
-                if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
-              }}
-              className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-              title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
-            >
-              <Brain className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Input row */}
-          <div className="flex items-center gap-2">
-            {/* Desktop tools - hidden on mobile */}
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="relative">
-                <Button
-                  onClick={() => setShowAttachmentMenu(prev => !prev)}
-                  className="p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+      {/* --- RESTRUCTURED FOOTER --- */}
+      {/* FIX 2: Full-width bar with centered content inside */}
+      <div className="fixed bottom-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none bg-white/95 backdrop-blur-xl">
+        <motion.footer
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="relative w-full max-w-screen-2xl mx-auto p-3 md:p-4 bg-white/90 rounded-2xl shadow-xl border border-gray-200/50 pointer-events-auto"
+        >
+          <div className="w-full px-2 sm:px-4">
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-2 p-3 text-sm text-red-800 bg-red-100 rounded-xl flex justify-between items-center"
                 >
-                  <Paperclip size={20} />
-                </Button>
-                <AnimatePresence>
-                  {showAttachmentMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
-                    >
-                      <button
-                        onClick={() => handleAttachmentClick('gallery')}
-                        className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                      >
-                        <ImageUp size={20} /> From Gallery
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick('camera')}
-                        className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
-                      >
-                        <Camera size={20} /> Take Photo
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <span>{error}</span>
+                  <button onClick={() => setError(null)}>
+                    <X size={18} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {isTranscribing && (
+              <div className="flex items-center justify-center text-sm text-gray-600 mb-2">
+                <TypingIndicator /> Transcribing audio... please wait.
               </div>
-              <Button
-                onClick={() => {
-                  setUseSearch(!useSearch);
-                  if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
-                }}
-                className={`p-3 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-                title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
-              >
-                <Search className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={() => {
-                  setUseThinking(!useThinking);
-                  if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
-                }}
-                className={`p-3 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-                title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
-              >
-                <Brain className="w-5 h-5" />
-              </Button>
-            </div>
+            )}
+            {uploadedImage && (
+              <div className="mb-2 p-2 bg-gray-100 rounded-xl flex items-center gap-2">
+                <img src={uploadedImage} alt="Preview" className="h-10 w-10 rounded-lg object-cover" />
+                <span className="text-sm flex-1">Image will be sent with your message.</span>
+                <button onClick={() => setUploadedImage(null)}>
+                  <X size={18} className="text-red-500" />
+                </button>
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              {/* Tools row - appears above input on mobile, inline on desktop */}
+              <div className="flex items-center gap-2 sm:hidden">
+                <div className="relative" ref={attachmentMenuRef}>
+                  <Button
+                    onClick={() => setShowAttachmentMenu(prev => !prev)}
+                    className="p-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+                  >
+                    <Paperclip size={18} />
+                  </Button>
+                  <AnimatePresence>
+                    {showAttachmentMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                      >
+                        <button
+                          onClick={() => handleAttachmentClick('gallery')}
+                          className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <ImageUp size={20} /> From Gallery
+                        </button>
+                        <button
+                          onClick={() => handleAttachmentClick('camera')}
+                          className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <Camera size={20} /> Take Photo
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <Button
+                  onClick={() => {
+                    setUseSearch(!useSearch);
+                    if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
+                  }}
+                  className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                  title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    setUseThinking(!useThinking);
+                    if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
+                  }}
+                  className={`p-2.5 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                  title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
+                >
+                  <Brain className="w-4 h-4" />
+                </Button>
+              </div>
 
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder={`Ask in ${getLanguageDetails(selectedLanguage).nativeName}...`}
-              disabled={isStreaming || isTranscribing}
-              rows={1}
-              className="w-full p-3 text-sm bg-gray-100 rounded-xl border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 resize-none min-h-[44px] max-h-32"
-            />
-            <Button
-              onClick={handleMicClick}
-              disabled={isStreaming}
-              className="p-2.5 sm:p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
-            >
-              {isRecording ? <Square size={18} className="sm:w-5 text-red-500" /> : <Mic size={18} className="sm:w-5" />}
-            </Button>
-            <Button
-              onClick={() => handleSendMessage()}
-              disabled={isStreaming || (!input.trim() && !uploadedImage)}
-              className="p-2.5 sm:p-3 bg-green-600 text-white rounded-xl w-12 h-10 sm:w-14 sm:h-12 flex items-center justify-center"
-            >
-              {isStreaming ? <TypingIndicator /> : <Send size={18} className="sm:w-5" />}
-            </Button>
+              {/* Input row */}
+              <div className="flex items-center gap-2">
+                {/* Desktop tools - hidden on mobile */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="relative" ref={attachmentMenuRef}>
+                    <Button
+                      onClick={() => setShowAttachmentMenu(prev => !prev)}
+                      className="p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600"
+                    >
+                      <Paperclip size={20} />
+                    </Button>
+                    <AnimatePresence>
+                      {showAttachmentMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute bottom-full mb-2 w-48 bg-white rounded-xl shadow-lg border p-2 z-10"
+                        >
+                          <button
+                            onClick={() => handleAttachmentClick('gallery')}
+                            className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                          >
+                            <ImageUp size={20} /> From Gallery
+                          </button>
+                          <button
+                            onClick={() => handleAttachmentClick('camera')}
+                            className="w-full flex items-center gap-3 text-left p-2 rounded-lg hover:bg-gray-100"
+                          >
+                            <Camera size={20} /> Take Photo
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setUseSearch(!useSearch);
+                      if (!useSearch) setUseThinking(false); // Disable thinking when enabling search
+                    }}
+                    className={`p-3 rounded-xl text-sm font-medium transition-all ${useSearch ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                    title={useSearch ? 'Search enabled - using web search' : 'Search disabled - using basic AI'}
+                  >
+                    <Search className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setUseThinking(!useThinking);
+                      if (!useThinking) setUseSearch(false); // Disable search when enabling thinking
+                    }}
+                    className={`p-3 rounded-xl text-sm font-medium transition-all ${useThinking ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                    title={useThinking ? 'Thinking enabled - shows reasoning process' : 'Thinking disabled - direct answers'}
+                  >
+                    <Brain className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder={`Ask in ${getLanguageDetails(selectedLanguage).nativeName}...`}
+                  disabled={isStreaming || isTranscribing}
+                  rows={1}
+                  className="flex-1 p-3 text-sm bg-gray-100 rounded-xl border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 resize-none min-h-[44px] max-h-32"
+                />
+                <Button
+                  onClick={handleMicClick}
+                  disabled={isStreaming}
+                  className="p-2.5 sm:p-3 bg-gray-200 hover:bg-gray-300 rounded-xl text-gray-600 flex-shrink-0"
+                >
+                  {isRecording ? <Square size={18} className="sm:w-5 text-red-500" /> : <Mic size={18} className="sm:w-5" />}
+                </Button>
+                <Button
+                  onClick={() => handleSendMessage()}
+                  disabled={isStreaming || (!input.trim() && !uploadedImage)}
+                  className="p-2.5 sm:p-3 bg-green-600 text-white rounded-xl w-12 h-10 sm:w-14 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                >
+                  {isStreaming ? <TypingIndicator /> : <Send size={18} className="sm:w-5" />}
+                </Button>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
           </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            accept="image/*"
-            className="hidden"
-          />
-        </div>
-      </footer>
+        </motion.footer>
+      </div>
     </div>
   );
 }
